@@ -108,7 +108,7 @@ CREATE TABLE `tb_group_buy` (
   `create_time`    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `update_time`    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_product` (`product_id`),
+  KEY `idx_product` (`product_id`),
   KEY `idx_community_status` (`community_id`, `status`),
   KEY `idx_deadline` (`status`, `deadline`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='团购活动';

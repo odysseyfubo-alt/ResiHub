@@ -65,6 +65,15 @@ $tLi = Login '13900000005'
 $tWang = EnsureResident '13900007777' '7幢' '1201' $tManager
 Check '四个账号登录成功' (($tManager -and $tZhang -and $tLi -and $tWang) -ne $null) ''
 
+# 让脚本可重复执行：清掉上一轮为商品 5 造的团与订单，库存复原
+Sql "delete from tb_order where product_id in (3, 5)" | Out-Null
+Sql "delete from tb_group_buy where product_id = 5" | Out-Null
+Sql "update tb_group_buy set current_users = 0, status = 0 where product_id = 3" | Out-Null
+Sql "update tb_product set stock = total_stock where id in (3, 5)" | Out-Null
+# 清掉上一轮的名额与占位集合，否则 Lua 会判定重复参团
+$gbKeys = & $redis -p 6380 -n 1 keys 'gb:*'
+foreach ($k in $gbKeys) { if ($k) { & $redis -p 6380 -n 1 del $k | Out-Null } }
+
 Write-Host "`n== 1. 商品列表与详情" -ForegroundColor Cyan
 $products = (Json 'GET' '/product/list' $tZhang).data
 Check '本小区商品 5 个' ($products.Count -eq 5) $products.Count

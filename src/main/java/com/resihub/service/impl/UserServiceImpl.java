@@ -164,6 +164,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.ok();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${resihub.demo-mode:true}")
+    private boolean demoMode;
+
+    @Override
+    public Result peekCode(String phone) {
+        if (!demoMode) {
+            return Result.fail("演示模式已关闭");
+        }
+        String code = stringRedisTemplate.opsForValue().get(LOGIN_CODE_KEY + phone);
+        if (code == null) {
+            return Result.fail("验证码已过期，请重新获取");
+        }
+        return Result.ok(code);
+    }
+
     @Override
     public void assertAudited() {
         User user = getById(UserHolder.getUserId());

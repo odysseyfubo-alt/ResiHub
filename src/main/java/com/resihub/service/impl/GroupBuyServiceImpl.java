@@ -112,28 +112,21 @@ public class GroupBuyServiceImpl extends ServiceImpl<GroupBuyMapper, GroupBuy> i
         if (!product.getCommunityId().equals(communityId)) {
             return Result.fail("只能为本小区商品开团");
         }
-        GroupBuy exists = query().eq("product_id", productId).one();
+        // 一商品可能有很多轮：只限制"同时只能有一个进行中"，每轮必须是新的 group 记录
+        GroupBuy active = query().eq("product_id", productId).eq("status", 0).one();
+        if (active != null) {
+            return Result.fail("该商品已有进行中的团购");
+        }
         int min = minUsers == null || minUsers < 1 ? 3 : minUsers;
         int hours = deadlineHours == null || deadlineHours < 1 ? 24 : deadlineHours;
         String point = pickupPoint == null || pickupPoint.trim().isEmpty() ? "小区东门" : pickupPoint.trim();
         LocalDateTime deadline = LocalDateTime.now().plusHours(hours);
 
-        GroupBuy gb;
-        if (exists == null) {
-            gb = new GroupBuy()
-                    .setProductId(productId).setCommunityId(communityId)
-                    .setLeaderUserId(userId).setMinUsers(min).setCurrentUsers(0)
-                    .setPickupPoint(point).setDeadline(deadline).setStatus(0);
-            save(gb);
-        } else {
-            if (exists.getStatus() != null && exists.getStatus() == 0) {
-                return Result.fail("该商品已有进行中的团购");
-            }
-            exists.setLeaderUserId(userId).setMinUsers(min).setCurrentUsers(0)
-                    .setPickupPoint(point).setDeadline(deadline).setStatus(0);
-            updateById(exists);
-            gb = exists;
-        }
+        GroupBuy gb = new GroupBuy()
+                .setProductId(productId).setCommunityId(communityId)
+                .setLeaderUserId(userId).setMinUsers(min).setCurrentUsers(0)
+                .setPickupPoint(point).setDeadline(deadline).setStatus(0);
+        save(gb);
         // 初始化 Redis 名额（幂等覆盖），清空上一轮的占位用户
         stringRedisTemplate.opsForValue().set(GROUP_STOCK_KEY + gb.getId(),
                 String.valueOf(product.getStock() == null ? 0 : product.getStock()), 7, TimeUnit.DAYS);

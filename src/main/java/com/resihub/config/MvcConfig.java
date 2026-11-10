@@ -25,9 +25,17 @@ public class MvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(new LoginInterceptor())
                 .excludePathPatterns(
                         "/user/code",
+                        "/user/code/peek",
                         "/user/login",
                         "/community/list",
-                        "/error"
+                        "/error",
+                        // 前端静态资源（index.html / css / js / 图片）不参与登录校验
+                        "/",
+                        "/index.html",
+                        "/css/**",
+                        "/js/**",
+                        "/imgs/**",
+                        "/favicon.ico"
                 ).order(1);
 
         // 0. token 刷新

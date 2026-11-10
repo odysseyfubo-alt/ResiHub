@@ -22,6 +22,9 @@ public interface IUserService extends IService<User> {
     /** 审核通过/驳回 */
     Result audit(Long userId, boolean pass);
 
-    /** 校验当前用户是否已通过业主认证（写操作前调用） */
+    /** 校验当前用户已通过业主认证（写操作前调用） */
     void assertAudited();
+
+    /** 演示模式：读取刚发出的验证码，方便本地演示时自动填充 */
+    Result peekCode(String phone);
 }

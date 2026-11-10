@@ -211,6 +211,38 @@ scripts/
 | POST/GET | `/points/sign` `/points/sign/count` `/points/log` `/points` | 积分与签到 |
 | GET | `/notification/list` `/notification/unread` | 站内消息 |
 
+## 前端（随 jar 一起提供，零构建）
+
+技术选择：**原生 JS + 手写 CSS，不引框架、不引 CDN、不用 Node 构建**——静态文件放在 `src/main/resources/static/`，Spring Boot 直接托管，`java -jar` 起来后访问 `http://127.0.0.1:8082/` 即可，同源无 CORS。
+
+- 设计：单一主色（teal）+ 中性灰阶、卡片化、毛玻璃顶栏、底部 Tab（≤720px）、骨架屏、Toast、空状态、`prefers-reduced-motion` 适配
+- 路由：hash 路由（`#/home`、`#/group` …），单文件 `js/app.js` + 一份 `css/app.css`
+- 角色感知：导航与按钮按 `role`/`audit` 动态渲染（居民看报修入口，维修工看工单池，管家看审核与看板）
+
+| 页面 | 能力 |
+|---|---|
+| 登录 | 验证码登录；「一键体验不同角色」四个演示账号；`?as=手机号` 直接进对应角色 |
+| 首页 | 待办统计（待自提/进行中工单/进行中团购）、服务九宫格、未读公告（红点）、邻里热门 |
+| 团购 | 团购卡片（成团进度条/倒计时/自提点）、参团、开团弹层、详情 |
+| 订单 | 订单状态、**6 位自提核销码**、一键核销、流团退款提示 |
+| 报修 | 居民提单；维修工工单池抢单 + 完成；管家看板（含超时升级单） |
+| 邻里圈 | 分类筛选、发帖、点赞、评论弹层 |
+| 活动 | 名额进度、报名拿核销码、管家发布与现场核销 |
+| 访客 | 生成一次性通行码（TTL）、历史记录 |
+| 我的 | 积分/连续签到/未读消息、签到、业主认证、积分流水、站内信、退出 |
+
+![首页](docs/screenshots/home.png)
+![团购](docs/screenshots/group.png)
+![订单与自提码](docs/screenshots/orders.png)
+![邻里圈](docs/screenshots/circle.png)
+![维修工工单池](docs/screenshots/repair-worker.png)
+![活动](docs/screenshots/activity.png)
+![访客通行](docs/screenshots/visit.png)
+![登录](docs/screenshots/login.png)
+<img src="docs/screenshots/m-home.png" width="300" alt="移动端首页">
+
+> 演示模式：`GET /user/code/peek` 会回显刚发出的验证码，方便本地演示；生产部署把 `resihub.demo-mode` 置为 `false` 即关闭。
+
 ## 已知简化（有意为之，不是遗漏）
 
 - **支付是模拟的**：参团直接生成订单，没有接支付渠道，因此也没有「超时未支付取消」；真实场景该用延迟队列补这一环

@@ -21,6 +21,12 @@ public class UserController {
         return userService.sendCode(phone);
     }
 
+    /** 演示模式：回显验证码（生产环境请关闭 resihub.demo-mode） */
+    @GetMapping("/code/peek")
+    public Result peek(@RequestParam("phone") String phone) {
+        return userService.peekCode(phone);
+    }
+
     /** 验证码登录，首次登录自动注册 */
     @PostMapping("/login")
     public Result login(@RequestBody LoginFormDTO form) {
