@@ -1,0 +1,8 @@
+target/
+.git/
+.idea/
+docs/screenshots/
+scripts/loadtest/out/
+scripts/shots/
+*.iml
+*.log

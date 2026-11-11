@@ -155,6 +155,27 @@ java -jar target/resihub-1.0.0.jar        # http://127.0.0.1:8082
 | 13900000004 / 05 | 居民（小区 1） |
 | 13900000006 | 居民（小区 2，用于验证数据隔离） |
 
+## Docker 部署（一条命令起全套）
+
+```powershell
+cd D:\ResiHub
+docker compose up -d --build        # MySQL 8 + Redis 7 + 应用（前端由应用自己托管）
+docker compose logs -f app          # 看到 "Tomcat started on port(s): 8082" 即就绪
+# 浏览器打开 http://127.0.0.1:8082/
+```
+
+- 多阶段构建：`maven:3.9-eclipse-temurin-21` 编译 → `eclipse-temurin:21-jre` 运行，产物 `resihub:1.0.0`
+- 首次启动自动执行 `src/main/resources/db/init.sql`（建表 + 种子数据），数据落在 `mysql-data` / `redis-data` 卷
+- 容器内按服务名互访（`mysql:3306` / `redis:6379`），用 `SPRING_*` 环境变量覆盖配置，**不需要改 jar 里的 application.yaml**
+- 默认不对外暴露 MySQL/Redis 端口，避免和本机已有的 3306 / 6380 冲突；要用本地客户端连就打开 compose 里注释掉的 `3307:3306` / `6381:6379`
+
+```powershell
+docker compose down        # 停止，保留数据
+docker compose down -v     # 停止并清空数据卷（下次启动重跑 init.sql）
+```
+
+> 注意：`scripts/smoke/*.ps1` 是按**直连本机** MySQL(3306) / Redis(6380) 写的，容器化后要么打开端口映射并改脚本端口，要么用浏览器人工点验。
+
 ## 这版实现里踩到并修掉的坑
 
 1. **XACK 用错 key** → PEL 永不清理，异常触发 pending 重放；改为真实 stream 名
